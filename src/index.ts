@@ -2,11 +2,8 @@ import codegen from 'codegen.macro';
 
 import * as router from './router';
 import {
-    reconstruct,
-    reconstructable,
-} from './reconstruct';
-import {
     waitDOMContentLoaded,
+    waitForSelector,
     endlessWaiting,
 } from './util';
 
@@ -29,44 +26,41 @@ export interface Article {
     reporters?: Nullable<Reporter[]>;
 }
 
+export interface WaitForSelector { (selector: string): Promise<void>; }
+export interface ReadyToParse { (waitForSelector: WaitForSelector): Promise<void>; }
+
 export interface Impl {
     parse: () => Article;
-    readyToParse?: Nullable<() => Promise<void>>;
+    readyToParse?: Nullable<ReadyToParse>;
     cleanup?: Nullable<() => void>;
 }
 
-const routeTree = codegen<router.Node[]>`
-    const sites = require('./sites').default;
-    const router = require('./router');
-    module.exports = router.stringify(
-        router.bake(sites),
-        'router.Node',
-        'router.Wildcard',
-    );
-`;
 export function here(url=location.href) {
-    const site = router.match(url.substr(url.indexOf('://') + 3), routeTree);
+    if (!here.routeTree) {
+        here.routeTree = codegen<router.Node[]>`
+            const sites = require('./sites').default;
+            const router = require('./router');
+            module.exports = router.stringify(
+                router.bake(sites),
+                'router.Node',
+                'router.Wildcard',
+            );
+        `;
+    }
+    const site = router.match(url.substr(url.indexOf('://') + 3), here.routeTree);
     if (!site) throw new Error('이 사이트는 지원되지 않습니다.');
     return site;
 };
+here.routeTree = null as router.Node[] | null;
 
-async function main() {
-    if (!reconstructable()) return;
-    try {
-        const where = here();
-        const impl: Impl = require('./impl/' + where);
-        await Promise.race([
-            impl.readyToParse ? impl.readyToParse() : endlessWaiting,
-            waitDOMContentLoaded(),
-        ]);
-        const article =
-            impl.parse ? await impl.parse() as Article :
-            null;
-        if (article == null) throw new Error('구현된 파싱 함수가 없습니다.');
-        reconstruct(article, impl.cleanup);
-    } catch (e) {
-        console.error(e ? (e.stack || e) : e);
-    }
+export function getImpl(where=here()): Impl {
+    return require('./impl/' + where);
 }
 
-main();
+export async function coreProcess(impl=getImpl()): Promise<[Article, Impl]> {
+    await Promise.race([
+        impl.readyToParse ? impl.readyToParse(waitForSelector) : endlessWaiting,
+        waitDOMContentLoaded(),
+    ]);
+    return [await impl.parse() as Article, impl];
+}
