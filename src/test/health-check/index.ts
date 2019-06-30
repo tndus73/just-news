@@ -8,6 +8,7 @@ import {
     getImpl,
     fromJSON,
 } from '../..';
+import imageReporter from './reporter/image';
 
 
 interface Case {
@@ -16,6 +17,16 @@ interface Case {
     check: string[];
     related: string[];
 }
+
+interface JobError {
+    type: 'error';
+    impl: string;
+    error: Error;
+}
+interface JobOk extends UnwrapPromise<ReturnType<typeof doJob>> {
+    type: 'ok';
+}
+export type JobResult = (JobError | JobOk) & { duration: number };
 
 // `impl` 기준 사전순으로 정렬할 것
 const cases: Case[] = [
@@ -169,14 +180,6 @@ async function run() {
     const headless = true;
     const workers = [0, 1, 2, 3, 4, 5, 6, 7];
     //*/
-    type JobResult = (JobError | JobOk) & { duration: number };
-    interface JobError {
-        type: 'error';
-        error: Error;
-    }
-    interface JobOk extends UnwrapPromise<ReturnType<typeof doJob>> {
-        type: 'ok';
-    }
     const browser = await puppeteer.launch({ headless });
     await Promise.all(workers.map(async () => {
         let job: Case;
@@ -192,13 +195,14 @@ async function run() {
             const jobResult = await doJob(job, page).then(
                 result => ({ type: 'ok' as const, ...result }),
             ).catch(
-                error => ({ type: 'error' as const, error }),
+                error => ({ type: 'error' as const, impl: job.impl, error }),
             );
             const duration = Date.now() - startTime;
             jobResults.push({ ...jobResult, duration });
             await page.close();
         }
     }));
+    await imageReporter(jobResults, browser);
     await browser.close();
     fs.writeFileSync(
         './tmp/health-check.json',
