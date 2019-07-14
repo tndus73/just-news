@@ -1,27 +1,32 @@
 import * as $ from 'jquery';
-import { clearStyles } from '../util';
-import { Article, Timestamp } from '..';
 
-export const cleanup = () => {
-    $('#scrollDiv, #realclick_view, script, iframe, .mask_div').remove();
-}
+import {
+    Article,
+    ReadyToParse,
+} from '..';
+import {
+    clearStyles,
+    parseTimestamp,
+} from '../util';
+
+
+export const readyToParse: ReadyToParse = wait => wait('#SG_CreatorEmail');
 
 export function parse(): Article {
     return {
-        title: document.querySelector('.container>.content>.titleh1>h1')!.childNodes[0].textContent,
-        subtitle: $('.container>.content>.titleh2>h2').text() || undefined,
-        content: clearStyles(document.getElementById('article_txt')!).innerHTML,
-        timestamp: (() => {
-            let res: Timestamp = {};
-            document.getElementById('SG_ArticleDateLine')!.textContent!
-                .replace(/(입력|수정)\s*(\d{4}-\d{2}-\d{2})\s*(\d{2}:\d{2}:\d{2})/g, (_, p1, p2, p3) => {
-                    var ts = p2 + 'T' + p3 + '+09:00'; // ISO 8601
-                    if (p1 === '입력') res.created = new Date(ts);
-                    else if (p1 === '수정') res.lastModified = new Date(ts);
-                    return '';
-                });
-            return res
+        title: $('#title_sns .newViewTitle').text(),
+        subtitle: $('.subject h2').html(),
+        content: (() => {
+            const articleElement = $('.view_middleNews #article_txt')[0].cloneNode(true) as HTMLElement;
+            $('p > iframe[src*=ad]', articleElement).remove();
+            $('p', articleElement).filter((_, el) => !$(el).text().trim()).remove();
+            return clearStyles(articleElement).innerHTML;
         })(),
-        reporters: []
+        timestamp: parseTimestamp($('.article_head .clearfx .data').text()),
+        reporters: (() => {
+            const name = $('#SG_CreatorName').text();
+            const mail = $('#SG_CreatorEmail').text();
+            return [{ name, mail }];
+        })(),
     };
 }
