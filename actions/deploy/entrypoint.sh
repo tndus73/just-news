@@ -2,8 +2,13 @@
 RELEASE_DIR=../just-news-release
 BUILD_DIR=$(pwd)
 
+<<<<<<< HEAD
 echo "npm build"
 npm build
+=======
+echo "npm run build"
+npm run build
+>>>>>>> master
 ls -al
 
 echo "machine github.com login reactjs-bot password $GITHUB_TOKEN" >~/.netrc
