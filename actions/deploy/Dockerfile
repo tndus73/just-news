@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-FROM node
-LABEL "version"="0.0.6"
-=======
 FROM node:9
 LABEL "version"="0.0.7"
->>>>>>> master
 LABEL "com.github.actions.name"="Deploy"
 LABEL "com.github.actions.description"="Deploy just-news"
 LABEL "com.github.actions.icon"="archive"
