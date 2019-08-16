@@ -2,8 +2,8 @@ export default {
     // i
     'ITWORLD': ['www.itworld.co.kr/news/*'],
     // j
-	'JTBC': ['news.jtbc.joins.com/article/*', 'news.jtbc.joins.com/html/*'],
-	'JTBC-모바일': ['mnews.jtbc.joins.com/News/Article.aspx?*'],
+    'JTBC': ['news.jtbc.joins.com/article/*', 'news.jtbc.joins.com/html/*'],
+    'JTBC-모바일': ['mnews.jtbc.joins.com/News/Article.aspx?*'],
     // k
     'KBS': ['news.kbs.co.kr/news/view.do?*'],
     'KBS World': ['world.kbs.co.kr/*/news/news_*_detail.htm*'],
@@ -17,8 +17,8 @@ export default {
     // y
     'YTN': ['www.ytn.co.kr/_ln/*'],
     // ㄱ
-	'경향신문': ['biz.khan.co.kr/khan_art_view.html*', 'news.khan.co.kr/kh_news/khan_art_view.html*'],
-	'경향신문-모바일': ['m.biz.khan.co.kr/view.html*'],
+    '경향비즈-모바일': ['m.biz.khan.co.kr/view.html*'],
+    '경향신문': ['biz.khan.co.kr/khan_art_view.html*', 'news.khan.co.kr/kh_news/khan_art_view.html*'],
     '국민일보': ['news.kmib.co.kr/article/view.asp*'],
     // ㄴ
     '나우뉴스': ['nownews.seoul.co.kr/news/newsView.php*'],
